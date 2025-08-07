@@ -49,7 +49,7 @@ public class Interpreter implements Expr.Visitor<Object> {
 
     private boolean isEqual(Object a, Object b) {
         if (a == null && b == null) return true;
-        if (a ==null) return false;
+        if (a == null) return false;
 
         return a.equals(b);
     }
@@ -105,13 +105,27 @@ public class Interpreter implements Expr.Visitor<Object> {
                     return (double)left + (double)right;
                 }
 
-                if (left instanceof String && right instanceof String) {
-                    return (String)left + (String)right;
+                if (left instanceof String) {
+                    return left + stringify(right);
                 }
 
-                throw new RuntimeError(expr.operator, "Operands must be two numbers or two strings.");
+                if (right instanceof String) {
+                    return stringify(left) + right;
+                }
+
+                throw new RuntimeError(expr.operator, "Operands must be two numbers or at least one string.");
             case SLASH:
                 checkNumberOperands(expr.operator, left, right);
+
+                // I have conflicting opinions about this check.
+                // Without it, dividing by zero results in Infinity if left is positive
+                // and -Infinity if left is negative.
+                // This is mathematically correct (and therefore I like it), however I concede that in 99% of cases
+                // dividing by zero probably represents an arithmetic error and should be reported, so here it is.
+                if ((double)right == 0) {
+                    throw new RuntimeError(expr.operator, "Cannot divide by zero.");
+                }
+
                 return (double)left / (double)right;
             case STAR:
                 checkNumberOperands(expr.operator, left, right);
