@@ -67,6 +67,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitThisExpr(Expr.This expr) {
+        return lookUpVariable(expr.keyword, expr);
+    }
+
+    @Override
     public Object visitUnaryExpr(Expr.Unary expr) {
         Object right = evaluate(expr.right);
 
@@ -183,7 +188,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
         Map<String, LoxFunction> methods = new HashMap<>();
         for (Stmt.Function method : stmt.methods) {
-            LoxFunction function = new LoxFunction(method.name.lexeme, method.function, environment);
+            LoxFunction function = new LoxFunction(method.name.lexeme, method.function, environment, method.name.lexeme.equals("init"));
             methods.put(method.name.lexeme, function);
         }
 
@@ -201,7 +206,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
         String fnName = stmt.name.lexeme;
-        LoxFunction function = new LoxFunction(fnName, stmt.function, environment);
+        LoxFunction function = new LoxFunction(fnName, stmt.function, environment, false);
         environment.define(fnName, function);
         return null;
     }
@@ -258,7 +263,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitFunctionExpr(Expr.Function expr) {
-        return new LoxFunction(null, expr, environment);
+        return new LoxFunction(null, expr, environment, false);
     }
 
     @Override
